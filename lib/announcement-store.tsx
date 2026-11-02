@@ -10,12 +10,15 @@ import {
   useState,
 } from 'react';
 import {
+  ACKS_KEY,
   ANNOUNCEMENTS_KEY,
   READS_KEY,
+  storeAcknowledgements,
   storeReads,
   storeAnnouncements,
 } from './store-persistence';
 import type {
+  AcknowledgementRecord,
   Announcement,
   AppRole,
   EmployeeAccessRole,
@@ -47,6 +50,7 @@ interface CreateAnnouncementInput {
 interface AnnouncementContextValue {
   announcements: Announcement[];
   reads: ReadRecord[];
+  acknowledgements: AcknowledgementRecord[];
   role: AppRole;
   setRole: (role: AppRole) => void;
   employeeAccessRole: EmployeeAccessRole;
@@ -62,7 +66,9 @@ interface AnnouncementContextValue {
   deleteAnnouncement: (id: string) => void;
   markAsRead: (announcementId: string) => void;
   markAllRead: () => void;
+  acknowledgeAnnouncement: (announcementId: string) => void;
   isRead: (announcementId: string) => boolean;
+  isAcknowledged: (announcementId: string) => boolean;
   unreadCount: number;
   visibleToEmployee: Announcement[];
   getAnnouncement: (id: string) => Announcement | undefined;
@@ -80,6 +86,9 @@ export function AnnouncementProvider({
   );
   const [reads, setReads] = useState<ReadRecord[]>(
     () => storeReads.load() ?? INITIAL_READS,
+  );
+  const [acknowledgements, setAcknowledgements] = useState<AcknowledgementRecord[]>(
+    () => storeAcknowledgements.load() ?? [],
   );
   const [role, setPortalRole] = useState<AppRole>('provider');
   const [employeeAccessRole, setEmployeeAccessRoleState] =
@@ -135,6 +144,9 @@ export function AnnouncementProvider({
   useEffect(() => {
     storeReads.save(reads);
   }, [reads]);
+  useEffect(() => {
+    storeAcknowledgements.save(acknowledgements);
+  }, [acknowledgements]);
 
   const createAnnouncement = useCallback((input: CreateAnnouncementInput) => {
     const nowIso = new Date().toISOString();
@@ -184,10 +196,25 @@ export function AnnouncementProvider({
       }
       return [
         ...prev,
-        { announcementId, orgId: EMPLOYEE_ORG_ID, readAt: new Date().toISOString() },
+        { announcementId, orgId: EMPLOYEE_ORG_ID, userId: 'user-1', readAt: new Date().toISOString() },
       ];
     });
   }, [canViewProductUpdates]);
+
+  const acknowledgeAnnouncement = useCallback((announcementId: string) => {
+    if (!canAcknowledgeProductUpdates) {
+      return;
+    }
+    setAcknowledgements((prev) => {
+      if (prev.some((r) => r.announcementId === announcementId && r.userId === 'user-1')) {
+        return prev;
+      }
+      return [
+        ...prev,
+        { announcementId, orgId: EMPLOYEE_ORG_ID, userId: 'user-1', acknowledgedAt: new Date().toISOString() },
+      ];
+    });
+  }, [canAcknowledgeProductUpdates]);
 
   const markAllRead = useCallback(() => {
     if (!canViewProductUpdates) {
@@ -245,11 +272,13 @@ export function AnnouncementProvider({
   const visibleToEmployee = useMemo(
     () =>
       canViewProductUpdates
-        ? announcements.filter(
-            (a) =>
-              a.status === 'published' &&
-              (a.audienceType === 'all' || a.audienceOrgs.includes(EMPLOYEE_ORG_ID)),
-          )
+        ? announcements.filter((a) => {
+            if (a.status !== 'published' || a.archivedAt) return false;
+            if (a.notifications?.productUpdates === false) return false;
+            const orgScope = a.audienceType === 'all' || a.audienceOrgs.includes(EMPLOYEE_ORG_ID);
+            const planAllowed = !a.applicablePlans || a.applicablePlans.includes('Enterprise') || a.applicablePlans.includes('Growth') || a.applicablePlans.includes('Starter');
+            return orgScope && planAllowed;
+          })
         : [],
     [announcements, canViewProductUpdates],
   );
@@ -272,6 +301,14 @@ export function AnnouncementProvider({
     [employeeReadIds],
   );
 
+  const isAcknowledged = useCallback(
+    (announcementId: string) =>
+      acknowledgements.some(
+        (r) => r.announcementId === announcementId && r.userId === 'user-1',
+      ),
+    [acknowledgements],
+  );
+
   const getAnnouncement = useCallback(
     (id: string) => announcements.find((a) => a.id === id),
     [announcements],
@@ -280,6 +317,7 @@ export function AnnouncementProvider({
   const value: AnnouncementContextValue = {
     announcements,
     reads,
+    acknowledgements,
     role,
     setRole,
     employeeAccessRole,
@@ -295,7 +333,9 @@ export function AnnouncementProvider({
     deleteAnnouncement,
     markAsRead,
     markAllRead,
+    acknowledgeAnnouncement,
     isRead,
+    isAcknowledged,
     unreadCount,
     visibleToEmployee,
     getAnnouncement,
@@ -316,4 +356,4 @@ export function useAnnouncements() {
   return ctx;
 }
 
-export { ANNOUNCEMENTS_KEY, READS_KEY };
+export { ACKS_KEY, ANNOUNCEMENTS_KEY, READS_KEY };

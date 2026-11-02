@@ -47,6 +47,11 @@ export const STATUS_META: Record<
     className: 'bg-muted text-muted-foreground border-border',
     dot: 'bg-muted-foreground',
   },
+  archived: {
+    label: 'Archived',
+    className: 'bg-secondary text-secondary-foreground border-border',
+    dot: 'bg-muted-foreground',
+  },
 };
 
 export const CATEGORY_BADGE: Record<AnnouncementCategory, string> = {

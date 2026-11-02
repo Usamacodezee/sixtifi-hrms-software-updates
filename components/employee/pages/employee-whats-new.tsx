@@ -8,7 +8,14 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
 export function EmployeeWhatsNew({ onNavigate }: { onNavigate: (to: string) => void }) {
-  const { visibleToEmployee, isRead, employeeAccessRole, canAcknowledgeProductUpdates, canManageAnnouncements } = useAnnouncements();
+  const {
+    visibleToEmployee,
+    isRead,
+    isAcknowledged,
+    employeeAccessRole,
+    canAcknowledgeProductUpdates,
+    canManageAnnouncements,
+  } = useAnnouncements();
   const sorted = [...visibleToEmployee].sort(
     (a, b) =>
       new Date(b.publishedAt ?? b.createdAt).getTime() - new Date(a.publishedAt ?? a.createdAt).getTime(),
@@ -56,6 +63,7 @@ export function EmployeeWhatsNew({ onNavigate }: { onNavigate: (to: string) => v
         <div className="grid gap-4">
           {sorted.map((a) => {
             const read = isRead(a.id);
+            const requiresAcknowledgement = Boolean(a.requiresAcknowledgement && !isAcknowledged(a.id));
             return (
               <Card key={a.id} className="overflow-hidden transition-colors hover:border-primary/40">
                 <div className="p-4 sm:p-5">
@@ -67,6 +75,11 @@ export function EmployeeWhatsNew({ onNavigate }: { onNavigate: (to: string) => v
                         {!read && (
                           <span className="rounded-full bg-primary-soft px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
                             New
+                          </span>
+                        )}
+                        {requiresAcknowledgement && (
+                          <span className="rounded-full bg-warning-soft px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-warning">
+                            Action required
                           </span>
                         )}
                       </div>
@@ -85,7 +98,7 @@ export function EmployeeWhatsNew({ onNavigate }: { onNavigate: (to: string) => v
                       <span>{a.author}</span>
                     </div>
                     <Button variant="outline" onClick={() => onNavigate(`/employee/whats-new/${a.id}`)}>
-                      {read ? 'View update' : 'Read update'}
+                      {requiresAcknowledgement ? 'Review & acknowledge' : read ? 'View update' : 'Read update'}
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </div>

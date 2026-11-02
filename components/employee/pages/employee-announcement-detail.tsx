@@ -17,7 +17,7 @@ export function EmployeeAnnouncementDetail({
   id: string;
   onNavigate: (to: string) => void;
 }) {
-  const { getAnnouncement, isRead, markAsRead } = useAnnouncements();
+  const { getAnnouncement, isRead, isAcknowledged, markAsRead, acknowledgeAnnouncement } = useAnnouncements();
   const announcement = useMemo(() => getAnnouncement(id), [getAnnouncement, id]);
 
   useEffect(() => {
@@ -38,6 +38,8 @@ export function EmployeeAnnouncementDetail({
   }
 
   const read = isRead(announcement.id);
+  const acknowledged = isAcknowledged(announcement.id);
+  const requiresAcknowledgement = Boolean(announcement.requiresAcknowledgement);
 
   return (
     <div className="space-y-6">
@@ -76,11 +78,30 @@ export function EmployeeAnnouncementDetail({
             dangerouslySetInnerHTML={{ __html: announcement.contentHtml }}
           />
 
+          {requiresAcknowledgement && (
+            <div className="mt-6 rounded-lg border border-warning/40 bg-warning-soft/50 p-4 text-sm text-foreground">
+              <p className="font-medium text-warning">Acknowledgement required</p>
+              <p className="mt-1 text-muted-foreground">
+                This update requires confirmation before it is considered complete for your role.
+              </p>
+            </div>
+          )}
+
           <div className="mt-6 flex flex-wrap items-center gap-3">
-            <Button onClick={() => markAsRead(announcement.id)} variant={read ? 'secondary' : 'default'}>
-              {read ? <Check className="mr-2 h-4 w-4" /> : <Eye className="mr-2 h-4 w-4" />}
-              {read ? 'Marked as read' : 'Mark as read'}
-            </Button>
+            {requiresAcknowledgement ? (
+              <Button
+                onClick={() => acknowledgeAnnouncement(announcement.id)}
+                variant={acknowledged ? 'secondary' : 'default'}
+              >
+                {acknowledged ? <Check className="mr-2 h-4 w-4" /> : <Eye className="mr-2 h-4 w-4" />}
+                {acknowledged ? 'Acknowledged' : 'Acknowledge update'}
+              </Button>
+            ) : (
+              <Button onClick={() => markAsRead(announcement.id)} variant={read ? 'secondary' : 'default'}>
+                {read ? <Check className="mr-2 h-4 w-4" /> : <Eye className="mr-2 h-4 w-4" />}
+                {read ? 'Marked as read' : 'Mark as read'}
+              </Button>
+            )}
           </div>
         </div>
       </Card>

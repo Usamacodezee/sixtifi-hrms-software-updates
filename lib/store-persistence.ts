@@ -1,7 +1,8 @@
-import type { Announcement, ReadRecord } from './types';
+import type { AcknowledgementRecord, Announcement, ReadRecord } from './types';
 
 export const ANNOUNCEMENTS_KEY = 'helix:announcements';
 export const READS_KEY = 'helix:reads';
+export const ACKS_KEY = 'helix:acknowledgements';
 
 function safeParse<T>(raw: string | null): T | null {
   if (!raw) return null;
@@ -39,5 +40,20 @@ export const storeReads = {
   clear: () => {
     if (typeof window === 'undefined') return;
     localStorage.removeItem(READS_KEY);
+  },
+};
+
+export const storeAcknowledgements = {
+  load: (): AcknowledgementRecord[] | null =>
+    typeof window === 'undefined'
+      ? null
+      : safeParse<AcknowledgementRecord[]>(localStorage.getItem(ACKS_KEY)),
+  save: (value: AcknowledgementRecord[]) => {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem(ACKS_KEY, JSON.stringify(value));
+  },
+  clear: () => {
+    if (typeof window === 'undefined') return;
+    localStorage.removeItem(ACKS_KEY);
   },
 };
