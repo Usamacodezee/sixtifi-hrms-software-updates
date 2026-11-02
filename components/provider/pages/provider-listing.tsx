@@ -48,6 +48,7 @@ export function ProviderListing({
   announcements,
   config,
   onNavigate,
+  onEdit,
   onPublishNow,
   onDuplicate,
   onDelete,
@@ -58,6 +59,7 @@ export function ProviderListing({
   announcements: Announcement[];
   config: ListingConfig;
   onNavigate: (to: string) => void;
+  onEdit?: (a: Announcement) => void;
   onPublishNow?: (a: Announcement) => void;
   onDuplicate?: (a: Announcement) => void;
   onDelete?: (a: Announcement) => void;
@@ -121,7 +123,6 @@ export function ProviderListing({
                   <SelectItem value="all">All statuses</SelectItem>
                   <SelectItem value="published">Published</SelectItem>
                   <SelectItem value="scheduled">Scheduled</SelectItem>
-                  <SelectItem value="draft">Draft</SelectItem>
                 </SelectContent>
               </Select>
             )}
@@ -215,7 +216,13 @@ export function ProviderListing({
                         <Eye className="mr-2 h-3.5 w-3.5" />
                         View
                       </DropdownMenuItem>
-                      {a.status === 'draft' && onPublishNow && (
+                      {a.status !== 'published' && onEdit && (
+                        <DropdownMenuItem onClick={() => onEdit(a)}>
+                          <Eye className="mr-2 h-3.5 w-3.5" />
+                          Edit
+                        </DropdownMenuItem>
+                      )}
+                      {a.status !== 'published' && onPublishNow && (
                         <DropdownMenuItem onClick={() => onPublishNow(a)}>
                           <Send className="mr-2 h-3.5 w-3.5" />
                           Publish now

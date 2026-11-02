@@ -41,11 +41,8 @@ export function ProviderSidebar({
 
   const items: NavItem[] = [
     { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, to: '/provider/dashboard' },
-    { key: 'updates', label: 'Product Updates', icon: Megaphone, badge: counts.updates, to: '/provider/updates' },
+    { key: 'updates', label: 'Scheduled & Published', icon: Megaphone, badge: counts.updates, to: '/provider/updates' },
     { key: 'create', label: 'Create Announcement', icon: PlusCircle, to: '/provider/create' },
-    { key: 'scheduled', label: 'Scheduled', icon: Clock, badge: counts.scheduled, to: '/provider/scheduled' },
-    { key: 'published', label: 'Published', icon: Send, badge: counts.published, to: '/provider/published' },
-    { key: 'drafts', label: 'Drafts', icon: FileEdit, badge: counts.drafts, to: '/provider/drafts' },
   ];
 
   const go = (to: string) => {

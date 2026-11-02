@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ArrowLeft,
   ArrowRight,
@@ -64,7 +64,7 @@ interface FormState {
   audienceType: 'all' | 'selected';
   audienceOrgs: string[];
   notifications: NotificationPrefs;
-  scheduleMode: 'now' | 'schedule' | 'draft';
+  scheduleMode: 'now' | 'schedule';
   scheduledDate: string;
 }
 
@@ -87,11 +87,37 @@ const DEFAULT_FORM: FormState = {
   scheduledDate: '',
 };
 
-export function ProviderCreate({ onPublished }: { onPublished?: () => void }) {
-  const { createAnnouncement } = useAnnouncements();
+export function ProviderCreate({
+  editingId,
+  onPublished,
+}: {
+  editingId?: string;
+  onPublished?: () => void;
+}) {
+  const { announcements, createAnnouncement, updateAnnouncement } = useAnnouncements();
   const [step, setStep] = useState<StepKey>('details');
   const [form, setForm] = useState<FormState>(DEFAULT_FORM);
   const [showPreview, setShowPreview] = useState(false);
+
+  const announcementToEdit = editingId ? announcements.find((a) => a.id === editingId) : undefined;
+
+  useEffect(() => {
+    if (!announcementToEdit) return;
+
+    setForm({
+      title: announcementToEdit.title,
+      summary: announcementToEdit.summary,
+      category: announcementToEdit.category,
+      module: announcementToEdit.module,
+      contentHtml: announcementToEdit.contentHtml,
+      heroImage: announcementToEdit.heroImage ?? '',
+      audienceType: announcementToEdit.audienceType,
+      audienceOrgs: announcementToEdit.audienceOrgs,
+      notifications: announcementToEdit.notifications,
+      scheduleMode: announcementToEdit.status === 'scheduled' ? 'schedule' : 'now',
+      scheduledDate: announcementToEdit.scheduledFor ? new Date(announcementToEdit.scheduledFor).toISOString().slice(0, 16) : '',
+    });
+  }, [announcementToEdit]);
 
   const stepIndex = STEPS.findIndex((s) => s.key === step);
   const isFirst = stepIndex === 0;
@@ -113,29 +139,13 @@ export function ProviderCreate({ onPublished }: { onPublished?: () => void }) {
   const canAdvance = validation[step];
 
   const handlePrimary = () => {
-    if (form.scheduleMode === 'draft') {
-      createAnnouncement({
-        title: form.title,
-        summary: form.summary,
-        contentHtml: form.contentHtml,
-        category: form.category,
-        module: form.module,
-        audienceType: form.audienceType,
-        audienceOrgs: form.audienceOrgs,
-        notifications: form.notifications,
-        status: 'draft',
-        heroImage: form.heroImage || undefined,
-      });
-      toast.success('Saved as draft');
-      onPublished?.();
-      return;
-    }
     if (form.scheduleMode === 'schedule') {
       if (!form.scheduledDate) {
         toast.error('Please pick a scheduled date and time');
         return;
       }
-      createAnnouncement({
+
+      const announcementData = {
         title: form.title,
         summary: form.summary,
         contentHtml: form.contentHtml,
@@ -144,15 +154,29 @@ export function ProviderCreate({ onPublished }: { onPublished?: () => void }) {
         audienceType: form.audienceType,
         audienceOrgs: form.audienceOrgs,
         notifications: form.notifications,
-        status: 'scheduled',
         scheduledFor: new Date(form.scheduledDate).toISOString(),
         heroImage: form.heroImage || undefined,
-      });
-      toast.success('Announcement scheduled');
+      };
+
+      if (announcementToEdit) {
+        updateAnnouncement(announcementToEdit.id, {
+          ...announcementData,
+          status: 'scheduled',
+          publishedAt: undefined,
+        });
+        toast.success('Announcement updated and scheduled');
+      } else {
+        createAnnouncement({
+          ...announcementData,
+          status: 'scheduled',
+        });
+        toast.success('Announcement scheduled');
+      }
       onPublished?.();
       return;
     }
-    createAnnouncement({
+
+    const announcementData = {
       title: form.title,
       summary: form.summary,
       contentHtml: form.contentHtml,
@@ -161,22 +185,38 @@ export function ProviderCreate({ onPublished }: { onPublished?: () => void }) {
       audienceType: form.audienceType,
       audienceOrgs: form.audienceOrgs,
       notifications: form.notifications,
-      status: 'published',
       heroImage: form.heroImage || undefined,
-    });
-    toast.success('Announcement published — employees notified');
+    };
+
+    if (announcementToEdit) {
+      updateAnnouncement(announcementToEdit.id, {
+        ...announcementData,
+        status: 'published',
+        publishedAt: new Date().toISOString(),
+        scheduledFor: undefined,
+      });
+      toast.success('Announcement updated and published');
+    } else {
+      createAnnouncement({
+        ...announcementData,
+        status: 'published',
+      });
+      toast.success('Announcement published — employees notified');
+    }
     onPublished?.();
   };
 
-  const nextStatus = form.scheduleMode === 'draft' ? 'draft' : form.scheduleMode === 'schedule' ? 'scheduled' : 'published';
+  const nextStatus = form.scheduleMode === 'schedule' ? 'scheduled' : 'published';
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Create Announcement</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+            {announcementToEdit ? 'Edit Announcement' : 'Create Announcement'}
+          </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Build, preview, and publish an update to customer organizations.
+            Build, preview, and publish updates to customer organizations.
           </p>
         </div>
         <Button variant="outline" onClick={() => setShowPreview((v) => !v)}>
@@ -417,7 +457,7 @@ export function ProviderCreate({ onPublished }: { onPublished?: () => void }) {
 
                 <div className="space-y-3">
                   <Label>Publish options</Label>
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <PublishOption
                       active={form.scheduleMode === 'now'}
                       onClick={() => set('scheduleMode', 'now')}
@@ -431,13 +471,6 @@ export function ProviderCreate({ onPublished }: { onPublished?: () => void }) {
                       icon={CalendarClock}
                       title="Schedule"
                       description="Publish at a set time."
-                    />
-                    <PublishOption
-                      active={form.scheduleMode === 'draft'}
-                      onClick={() => set('scheduleMode', 'draft')}
-                      icon={Save}
-                      title="Save Draft"
-                      description="Come back later."
                     />
                   </div>
                   {form.scheduleMode === 'schedule' && (
@@ -470,12 +503,10 @@ export function ProviderCreate({ onPublished }: { onPublished?: () => void }) {
               </Button>
               {isLast ? (
                 <Button onClick={handlePrimary} disabled={!canAdvance}>
-                  {form.scheduleMode === 'draft' ? (
-                    <><Save className="mr-2 h-4 w-4" />Save Draft</>
-                  ) : form.scheduleMode === 'schedule' ? (
+                  {form.scheduleMode === 'schedule' ? (
                     <><CalendarClock className="mr-2 h-4 w-4" />Schedule</>
                   ) : (
-                    <><Send className="mr-2 h-4 w-4" />Publish Now</>
+                    <><Send className="mr-2 h-4 w-4" />{announcementToEdit ? 'Update & Publish' : 'Publish Now'}</>
                   )}
                 </Button>
               ) : (

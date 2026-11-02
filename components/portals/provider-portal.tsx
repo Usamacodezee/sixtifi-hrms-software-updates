@@ -21,10 +21,10 @@ export function ProviderPortal() {
 
   const counts = useMemo(
     () => ({
-      updates: announcements.length,
+      updates: announcements.filter((a) => a.status === 'published' || a.status === 'scheduled').length,
       published: announcements.filter((a) => a.status === 'published').length,
       scheduled: announcements.filter((a) => a.status === 'scheduled').length,
-      drafts: announcements.filter((a) => a.status === 'draft').length,
+      drafts: 0,
     }),
     [announcements],
   );
@@ -37,13 +37,14 @@ export function ProviderPortal() {
   } else if (section === 'updates') {
     content = <ProviderUpdates onNavigate={navigate} />;
   } else if (section === 'create') {
-    content = <ProviderCreate onPublished={() => navigate('/provider/updates')} />;
-  } else if (section === 'scheduled') {
-    content = <ProviderScheduled onNavigate={navigate} />;
-  } else if (section === 'published') {
-    content = <ProviderPublished onNavigate={navigate} />;
-  } else if (section === 'drafts') {
-    content = <ProviderDrafts onNavigate={navigate} />;
+    content = (
+      <ProviderCreate
+        editingId={segments[2]}
+        onPublished={() => navigate('/provider/updates')}
+      />
+    );
+  } else if (section === 'scheduled' || section === 'published') {
+    content = <ProviderUpdates onNavigate={navigate} />;
   } else if (section === 'analytics') {
     content = <ProviderDashboard onNavigate={navigate} />;
   } else if (section === 'announcement' && segments[2]) {

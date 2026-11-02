@@ -10,13 +10,14 @@ export function ProviderUpdates({ onNavigate }: { onNavigate: (to: string) => vo
 
   return (
     <ProviderListing
-      announcements={announcements}
+      announcements={announcements.filter((a) => a.status === 'published' || a.status === 'scheduled')}
       config={{
-        title: 'Product Updates',
-        description: 'All announcements across published, scheduled, and draft statuses.',
+        title: 'Scheduled & Published',
+        description: 'All live and future product updates without drafts.',
         showStatusFilter: true,
       }}
       onNavigate={onNavigate}
+      onEdit={(a) => onNavigate(`/provider/create/${a.id}`)}
       onPublishNow={(a) => {
         updateAnnouncement(a.id, {
           status: 'published',
@@ -26,7 +27,6 @@ export function ProviderUpdates({ onNavigate }: { onNavigate: (to: string) => vo
         toast.success(`Published "${a.title}"`);
       }}
       onDuplicate={(a) => {
-        const copy = { ...a };
         createAnnouncement({
           title: `${a.title} (Copy)`,
           summary: a.summary,
@@ -36,16 +36,18 @@ export function ProviderUpdates({ onNavigate }: { onNavigate: (to: string) => vo
           audienceType: a.audienceType,
           audienceOrgs: a.audienceOrgs,
           notifications: a.notifications,
-          status: 'draft',
+          status: a.status === 'scheduled' ? 'scheduled' : 'published',
+          scheduledFor: a.status === 'scheduled' ? a.scheduledFor : undefined,
+          heroImage: a.heroImage,
         });
-        toast.success('Duplicated as draft');
+        toast.success('Duplicated announcement');
       }}
       onDelete={(a) => {
         deleteAnnouncement(a.id);
         toast.success(`Deleted "${a.title}"`);
       }}
       emptyIcon={Megaphone}
-      emptyTitle="No product updates"
+      emptyTitle="No scheduled or published updates"
       emptyDescription="Create your first announcement to share updates with your customers."
     />
   );
