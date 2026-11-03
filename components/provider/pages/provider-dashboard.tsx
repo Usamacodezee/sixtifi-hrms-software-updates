@@ -113,9 +113,9 @@ export function ProviderDashboard({
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Dashboard & Analytics</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Product Updates Dashboard</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Track updates, reach, engagement, and the provider-controlled permission model across the HRMS module.
+            See what is live, what is scheduled, how customers are engaging, and how AI-powered announcements are flowing through the release process.
           </p>
         </div>
         {onNavigate && (

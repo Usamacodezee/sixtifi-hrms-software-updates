@@ -9,6 +9,11 @@ import {
   FileEdit,
   Building2,
   X,
+  Bot,
+  Activity,
+  Settings,
+  GitBranch,
+  Rocket,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
@@ -41,7 +46,12 @@ export function ProviderSidebar({
 
   const items: NavItem[] = [
     { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, to: '/provider/dashboard' },
-    { key: 'updates', label: 'Scheduled & Published', icon: Megaphone, badge: counts.updates, to: '/provider/updates' },
+    { key: 'updates', label: 'Announcements', icon: Megaphone, badge: counts.updates, to: '/provider/updates' },
+    { key: 'ai-drafts', label: 'AI Generated Drafts', icon: Bot, to: '/provider/ai-drafts' },
+    { key: 'release-manager', label: 'Release Manager', icon: Rocket, to: '/provider/release-manager' },
+    { key: 'automation-activity', label: 'Automation Activity', icon: Activity, to: '/provider/automation-activity' },
+    { key: 'integrations', label: 'Integrations', icon: GitBranch, to: '/provider/integrations' },
+    { key: 'settings', label: 'Settings', icon: Settings, to: '/provider/settings' },
     { key: 'create', label: 'Create Announcement', icon: PlusCircle, to: '/provider/create' },
   ];
 

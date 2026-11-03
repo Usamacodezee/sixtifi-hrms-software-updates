@@ -23,6 +23,25 @@ export type AnnouncementCategory =
   | 'Maintenance'
   | 'Security'
   | 'Deprecation';
+export type ChangeCategory =
+  | 'New Feature'
+  | 'Bug Fix'
+  | 'Improvement'
+  | 'UI/UX Enhancement'
+  | 'Performance Improvement'
+  | 'Security Update'
+  | 'Internal Refactoring';
+export type DraftReviewStatus = 'pending' | 'approved' | 'rejected' | 'needs-clarification' | 'draft';
+export type ReleaseManagerStatus =
+  | 'Planning'
+  | 'Draft'
+  | 'Awaiting Approval'
+  | 'Ready to Publish'
+  | 'Scheduled'
+  | 'Published';
+export type DeploymentState = 'Not Deployed' | 'Development' | 'Staging' | 'Production' | 'Deployment Failed';
+export type NotificationPreference = 'In-app' | 'Email' | 'Both' | 'No notification';
+export type OrganizationVisibility = 'All organizations' | 'Selected organizations' | 'Employee Management access';
 
 export type HRMSModule =
   | 'Core HR'
@@ -106,6 +125,24 @@ export interface Announcement {
   applicablePlans?: Array<'Starter' | 'Growth' | 'Enterprise'>;
   requiredModules?: HRMSModule[];
   requiredFeatures?: string[];
+  reviewStatus?: DraftReviewStatus;
+  aiGenerated?: boolean;
+  aiConfidence?: number;
+  sourcePullRequests?: string[];
+  jiraTicketIds?: string[];
+  deploymentStatus?: DeploymentState;
+  publicationEligible?: boolean;
+  rejectionReason?: string;
+  reviewer?: string;
+  organizationVisibility?: OrganizationVisibility;
+  notificationPreference?: NotificationPreference;
+  benefits?: string[];
+  changes?: string[];
+  audience?: string[];
+  description?: string;
+  generatedDate?: string;
+  changeCategory?: ChangeCategory;
+  sourceRepository?: string;
 }
 
 export interface Organization {
@@ -129,6 +166,74 @@ export interface DemoUser {
   department: string;
   designation: string;
   permissions: PermissionKey[];
+}
+
+export interface PullRequest {
+  id: string;
+  number: number;
+  title: string;
+  description: string;
+  author: string;
+  branch: string;
+  repository: string;
+  labels: string[];
+  jiraTicketIds: string[];
+  module: HRMSModule;
+  changedFiles: number;
+  mergedAt: string;
+  deploymentStatus: Record<'Development' | 'Staging' | 'Production', 'Successful' | 'Pending' | 'Failed'>;
+  processingStatus: 'detected' | 'analyzing' | 'ignored' | 'failed' | 'ready';
+  customerFacing: boolean;
+  changeCategory: ChangeCategory;
+}
+
+export interface AutomationLog {
+  id: string;
+  eventType: string;
+  source: string;
+  pullRequestId?: string;
+  announcementId?: string;
+  status: 'success' | 'warning' | 'error' | 'info';
+  message: string;
+  createdAt: string;
+}
+
+export interface Release {
+  id: string;
+  name: string;
+  version: string;
+  announcementIds: string[];
+  status: ReleaseManagerStatus;
+  deploymentStatus: DeploymentState;
+  scheduledAt?: string;
+  publishedAt?: string;
+  modules: string[];
+  approvalStatus: 'Pending' | 'Approved' | 'Rejected';
+}
+
+export interface AutomationSettings {
+  enableAutomaticDraftGeneration: boolean;
+  enableAIAnalysis: boolean;
+  requireJiraTicketReference: boolean;
+  automaticallyDetectCustomerFacingChanges: boolean;
+  automaticallyIgnoreInternalChanges: boolean;
+  defaultAnnouncementLanguage: string;
+  aiTone: 'Professional' | 'Friendly' | 'Technical';
+  generateBenefitsAutomatically: boolean;
+  generateSummariesAutomatically: boolean;
+  suggestAudienceAutomatically: boolean;
+  requireManualApproval: boolean;
+  allowedReviewerRoles: string[];
+  requireProductionDeploymentBeforePublishing: boolean;
+  allowBulkApproval: boolean;
+  automaticallyGroupMinorFixes: boolean;
+  groupChangesByReleaseVersion: boolean;
+  groupChangesByModule: boolean;
+  minimumChangesRequiredForGroupedRelease: number;
+  notifyAdminsWhenDraftGenerated: boolean;
+  notifyReviewersWhenApprovalPending: boolean;
+  notifyAdminsWhenDeploymentSucceeds: boolean;
+  notifyAdminsWhenAutomationFails: boolean;
 }
 
 export interface ReadRecord {

@@ -12,6 +12,11 @@ import { ProviderScheduled } from '@/components/provider/pages/provider-schedule
 import { ProviderPublished } from '@/components/provider/pages/provider-published';
 import { ProviderDrafts } from '@/components/provider/pages/provider-drafts';
 import { ProviderAnnouncementDetail } from '@/components/provider/pages/provider-announcement-detail';
+import { ProviderAIDrafts } from '@/components/provider/pages/provider-ai-drafts';
+import { ProviderIntegrations } from '@/components/provider/pages/provider-integrations';
+import { ProviderAutomationActivity } from '@/components/provider/pages/provider-automation-activity';
+import { ProviderSettings } from '@/components/provider/pages/provider-settings';
+import { ProviderReleaseManager } from '@/components/provider/pages/provider-release-manager';
 import { Toaster } from '@/components/ui/sonner';
 
 export function ProviderPortal() {
@@ -43,6 +48,16 @@ export function ProviderPortal() {
         onPublished={() => navigate('/provider/updates')}
       />
     );
+  } else if (section === 'ai-drafts') {
+    content = <ProviderAIDrafts onNavigate={navigate} />;
+  } else if (section === 'release-manager') {
+    content = <ProviderReleaseManager onNavigate={navigate} />;
+  } else if (section === 'automation-activity') {
+    content = <ProviderAutomationActivity onNavigate={navigate} />;
+  } else if (section === 'integrations') {
+    content = <ProviderIntegrations onNavigate={navigate} />;
+  } else if (section === 'settings') {
+    content = <ProviderSettings onNavigate={navigate} />;
   } else if (section === 'scheduled' || section === 'published') {
     content = <ProviderUpdates onNavigate={navigate} />;
   } else if (section === 'analytics') {
